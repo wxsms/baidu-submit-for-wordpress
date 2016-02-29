@@ -5,7 +5,7 @@ global $wpdb;
 if (isset($_POST['urls'])) {
     if (is_user_logged_in() && current_user_can('manage_options')) {
         $urls = $_POST['urls'];
-        $api = 'http://data.zz.baidu.com/urls?site=anubarak.com&token=UAAupwyHsxulANWw';
+        $api = 'http://data.zz.baidu.com/urls?site=xxx&token=xxx';
         $ch = curl_init();
         $options = array(
             CURLOPT_URL => $api,
