@@ -26,27 +26,18 @@ if (isset($_POST['urls'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
     <title>Baidu Submit Functions</title>
-    <link href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
-    <script src="//cdn.bootcss.com/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <style>
-        html, body {
-            height: 100%;
-        }
-
-        body {
-            padding-top: 70px;
-            position: relative;
-            overflow-y: scroll;;
-        }
-    </style>
+    <link href="public/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="public/css/core.css" rel="stylesheet">
 </head>
 <body data-spy="scroll" data-target="#main-nav">
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav" aria-expanded="false">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav"
+                    aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
@@ -190,36 +181,8 @@ if (isset($_POST['urls'])) {
         </div>
     </div>
 </div>
-<script>
-    $(function () {
-        var urlTable = $('#url-table'),
-            submitBtn = $('#submit'),
-            log = $('#log'),
-            checkAll = $('input[value=checkAll]');
-
-        checkAll.click(function () {
-            var $this = $(this);
-            console.log($this.is(':checked'));
-            $this.parents('table').find('tbody').find('input[type=checkbox]').prop('checked', $this.is(':checked'));
-        }).click();
-
-        submitBtn.click(function () {
-            var checkboxes = urlTable.find('tbody input[type=checkbox]:checked');
-            var urls = [];
-            for (var i = 0; i < checkboxes.length; i++) {
-                urls.push(checkboxes[i].value);
-            }
-            if (urls.length > 0) {
-                submitBtn.prop('disabled', true);
-                $.post('index.php', {
-                    urls: urls
-                }, function (data) {
-                    log.html(log.html() + '<br/>' + '[INFO]' + new Date().toLocaleString() + ': ' + data);
-                    submitBtn.prop('disabled', false);
-                });
-            }
-        })
-    })
-</script>
+<script src="public/lib/jquery/dist/jquery.min.js"></script>
+<script src="public/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="public/js/core.js"></script>
 </body>
 </html>
