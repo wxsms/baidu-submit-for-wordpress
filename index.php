@@ -1,21 +1,18 @@
 <?php
 require_once 'config.php';
 require_once $config->header_location;
+
 if (isset($_POST['urls'])) {
     if (is_user_logged_in() && current_user_can('manage_options')) {
-        $urls = $_POST['urls'];
-        $api = 'http://data.zz.baidu.com/urls?site={$config->site_domain}&token={$config->site_token}';
         $ch = curl_init();
-            $options = array(
-            CURLOPT_URL => $api,
+        curl_setopt_array($ch, array(
+            CURLOPT_URL => "http://data.zz.baidu.com/urls?site={$config->site_domain}&token={$config->site_token}",
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => implode("\n", $urls),
+            CURLOPT_POSTFIELDS => implode("\n", $_POST['urls']),
             CURLOPT_HTTPHEADER => array('Content-Type: text/plain'),
-        );
-        curl_setopt_array($ch, $options);
-        $result = curl_exec($ch);
-        echo $result;
+        ));
+        echo curl_exec($ch);
     } else {
         echo 'Request denied. Please login as admin first.';
     }
@@ -50,6 +47,11 @@ foreach ($articles as $article) {
             padding-top: 70px;
             position: relative;
             overflow-y: scroll;;
+        }
+
+        table tr > th:first-child,
+        table tr > td:first-child {
+            width: 70px;
         }
     </style>
 </head>
@@ -99,7 +101,7 @@ foreach ($articles as $article) {
                 <table class="table table-hover table-condensed">
                     <thead>
                     <tr>
-                        <th style="width: 70px"><input type="checkbox" value="checkAll"></th>
+                        <th><input type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
@@ -108,12 +110,9 @@ foreach ($articles as $article) {
                     <?php
                     foreach ($posts as $post) {
                         $permalink = get_permalink($post->ID);
-                        ?>
-                        <tr>
-                        <td style="width: 70px"><input type="checkbox" value="<?php echo $permalink; ?>"></td>
-                        <td><?php echo $post->post_title; ?></td>
-                        <td><?php echo $permalink; ?></td>
-                        </tr><?php } ?>
+                        echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$post->post_title}</td><td>{$permalink}</td></tr>";
+                    }
+                    ?>
                     </tbody>
                 </table>
             </div>
@@ -125,7 +124,7 @@ foreach ($articles as $article) {
                 <table class="table table-hover table-condensed">
                     <thead>
                     <tr>
-                        <th style="width: 70px"><input type="checkbox" value="checkAll"></th>
+                        <th><input type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
@@ -134,12 +133,9 @@ foreach ($articles as $article) {
                     <?php
                     foreach ($pages as $page) {
                         $permalink = get_permalink($page->ID);
-                        ?>
-                        <tr>
-                        <td style="width: 70px"><input type="checkbox" value="<?php echo $permalink; ?>"></td>
-                        <td><?php echo $page->post_title; ?></td>
-                        <td><?php echo $permalink; ?></td>
-                        </tr><?php } ?>
+                        echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$page->post_title}</td><td>{$permalink}</td></tr>";
+                    }
+                    ?>
                     </tbody>
                 </table>
             </div>
@@ -151,7 +147,7 @@ foreach ($articles as $article) {
                 <table class="table table-hover table-condensed">
                     <thead>
                     <tr>
-                        <th style="width: 70px"><input type="checkbox" value="checkAll"></th>
+                        <th><input type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
@@ -160,12 +156,9 @@ foreach ($articles as $article) {
                     <?php
                     foreach ($categories as $category) {
                         $permalink = get_category_link($category->term_id);
-                        ?>
-                        <tr>
-                        <td style="width: 70px"><input type="checkbox" value="<?php echo $permalink; ?>"></td>
-                        <td><?php echo $category->name; ?></td>
-                        <td><?php echo $permalink; ?></td>
-                        </tr><?php } ?>
+                        echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$category->name}</td><td>{$permalink}</td></tr>";
+                    }
+                    ?>
                     </tbody>
                 </table>
             </div>
@@ -177,7 +170,7 @@ foreach ($articles as $article) {
                 <table class="table table-hover table-condensed">
                     <thead>
                     <tr>
-                        <th style="width: 70px"><input type="checkbox" value="checkAll"></th>
+                        <th><input type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
@@ -185,13 +178,10 @@ foreach ($articles as $article) {
                     <tbody>
                     <?php
                     foreach ($tags as $tag) {
-                        $permalink = get_category_link($tag->term_id);
-                        ?>
-                        <tr>
-                        <td style="width: 70px"><input type="checkbox" value="<?php echo $permalink; ?>"></td>
-                        <td><?php echo $tag->name; ?></td>
-                        <td><?php echo $permalink; ?></td>
-                        </tr><?php } ?>
+                        $permalink = get_tag_link($tag->term_id);
+                        echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$tag->name}</td><td>{$permalink}</td></tr>";
+                    }
+                    ?>
                     </tbody>
                 </table>
             </div>
@@ -209,9 +199,8 @@ foreach ($articles as $article) {
 
         checkAll.click(function () {
             var $this = $(this);
-            console.log($this.is(':checked'));
             $this.parents('table').find('tbody').find('input[type=checkbox]').prop('checked', $this.is(':checked'));
-        }).click();
+        });
 
         submitBtn.click(function () {
             var checkboxes = urlTable.find('tbody input[type=checkbox]:checked');
