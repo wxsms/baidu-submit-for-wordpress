@@ -86,3 +86,6 @@ bower_components
 .bower-registry
 .bower-tmp
 
+### Local Config ###
+config.php
+

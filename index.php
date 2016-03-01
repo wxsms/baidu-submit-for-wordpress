@@ -1,13 +1,12 @@
 <?php
-require_once '../../wp-blog-header.php';
-global $wpdb;
-
+require_once 'config.php';
+require_once $config->header_location;
 if (isset($_POST['urls'])) {
     if (is_user_logged_in() && current_user_can('manage_options')) {
         $urls = $_POST['urls'];
-        $api = 'http://data.zz.baidu.com/urls?site=xxx&token=xxx';
+        $api = 'http://data.zz.baidu.com/urls?site={$config->site_domain}&token={$config->site_token}';
         $ch = curl_init();
-        $options = array(
+            $options = array(
             CURLOPT_URL => $api,
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
@@ -21,7 +20,19 @@ if (isset($_POST['urls'])) {
         echo 'Request denied. Please login as admin first.';
     }
     exit;
-} ?>
+}
+
+global $wpdb;
+
+$articles = $wpdb->get_results("SELECT ID,post_title,post_type FROM $wpdb->posts WHERE post_status = 'publish' AND (post_type='post' or post_type='page') AND post_password = '' order by post_date desc");
+$categories = get_categories();
+$tags = get_tags();
+$posts = $pages = array();
+foreach ($articles as $article) {
+    $article->post_type == 'post' ? $posts[] = $article : $pages[] = $article;
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +41,6 @@ if (isset($_POST['urls'])) {
           content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
     <title>Baidu Submit Functions</title>
     <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    <link href="public/css/core.css" rel="stylesheet">
     <style>
         html, body {
             height: 100%;
@@ -96,7 +106,6 @@ if (isset($_POST['urls'])) {
                     </thead>
                     <tbody>
                     <?php
-                    $posts = $wpdb->get_results("SELECT ID,post_title FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='post' AND post_password = '' order by post_date desc");
                     foreach ($posts as $post) {
                         $permalink = get_permalink($post->ID);
                         ?>
@@ -123,7 +132,6 @@ if (isset($_POST['urls'])) {
                     </thead>
                     <tbody>
                     <?php
-                    $pages = $wpdb->get_results("SELECT ID,post_title FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='page' AND post_password = '' order by post_date desc");
                     foreach ($pages as $page) {
                         $permalink = get_permalink($page->ID);
                         ?>
@@ -150,7 +158,6 @@ if (isset($_POST['urls'])) {
                     </thead>
                     <tbody>
                     <?php
-                    $categories = get_categories();
                     foreach ($categories as $category) {
                         $permalink = get_category_link($category->term_id);
                         ?>
@@ -177,7 +184,6 @@ if (isset($_POST['urls'])) {
                     </thead>
                     <tbody>
                     <?php
-                    $tags = get_tags();
                     foreach ($tags as $tag) {
                         $permalink = get_category_link($tag->term_id);
                         ?>
