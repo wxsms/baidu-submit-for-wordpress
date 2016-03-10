@@ -42,7 +42,7 @@ class BaiduSubmitForWordpressSettingsPage
     {
         add_options_page(
             'Baidu Submit for Wordpress', //page title
-            'Baidu Submit for Wordpress', //menu title
+            'Baidu Submit', //menu title
             'administrator', //capability
             'baidu_submit_for_wordpress', //menu slug
             array($this, 'create_admin_page') //function
@@ -68,7 +68,7 @@ class BaiduSubmitForWordpressSettingsPage
             </form>
             <br/>
 
-            <h1>Manually Submit Pages</h1>
+            <h1>Submit Manually</h1>
             <hr/>
             <div id="baidu-submit-for-wordpress-url-table">
                 <h3 class="page-header">Posts</h3>
