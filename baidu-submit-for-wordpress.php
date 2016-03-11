@@ -24,14 +24,15 @@ class BaiduSubmitForWordpress
     public function __construct()
     {
         //Init admin menu
-        add_action('admin_menu', array($this, 'baidu_submit_for_wordpress_menu'));
-        add_action('admin_init', array($this, 'page_init'));
+        add_action('admin_menu', array($this, 'admin_menu'));
+        add_action('admin_init', array($this, 'admin_init'));
+        add_action('admin_head', array($this, 'admin_head'));
 
         //Add JS to page footer
-        add_action('admin_footer', array($this, 'page_footer'));
+        add_action('admin_footer', array($this, 'admin_footer'));
 
         //Ajax function to handle manual submit
-        add_action('wp_ajax_baidu_submit_for_wordpress_manual', array($this, 'baidu_submit_for_wordpress_manual_callback'));
+        add_action('wp_ajax_baidu_submit_for_wordpress_manual', array($this, 'manual_submit_callback'));
 
         $this->fetch_links();
     }
@@ -60,29 +61,54 @@ class BaiduSubmitForWordpress
     }
 
     /**
-     * Add admin panel menu
+     * Add admin panel menus
+     *
      */
-    public function baidu_submit_for_wordpress_menu()
+    public function admin_menu()
     {
         add_options_page(
-            'Baidu Submit for Wordpress', //page title
+            'Baidu Submit for Wordpress Settings', //page title
             'Baidu Submit', //menu title
             'administrator', //capability
-            'baidu_submit_for_wordpress', //menu slug
-            array($this, 'create_admin_page') //function
+            'baidu_submit_for_wordpress_settings', //menu slug
+            array($this, 'create_admin_setting_page') //function
+        );
+
+        add_options_page(
+            'Baidu Submit for Wordpress Manual Submit',
+            'Baidu Submit for Wordpress Manual Submit',
+            'administrator',
+            'baidu_submit_for_wordpress_manual_submit',
+            array($this, 'create_admin_manual_submit_page')
         );
     }
 
     /**
-     * Add admin panel setting page
+     * Remove unused option tabs. Keep the major one.
+     *
      */
-    public function create_admin_page()
+    public function admin_head()
+    {
+        remove_submenu_page('options-general.php', 'baidu_submit_for_wordpress_manual_submit');
+    }
+
+    /**
+     * Add admin panel setting page
+     *
+     */
+    public function create_admin_setting_page()
     {
 
         $this->options = get_option('baidu_submit_for_wordpress_options'); ?>
 
         <div class="wrap">
-            <h2>Baidu Submit for Wordpress Settings</h2>
+            <h2>Baidu Submit for Wordpress - Settings</h2>
+
+            <h2 class="nav-tab-wrapper">
+                <a class="nav-tab nav-tab-active" href="<?php echo admin_url() ?>/options-general.php?page=baidu_submit_for_wordpress_settings">Settings</a>
+                <a class="nav-tab" href="<?php echo admin_url() ?>/options-general.php?page=baidu_submit_for_wordpress_manual_submit">Manual
+                    Submit</a>
+            </h2>
 
             <form method="post" action="options.php">
 
@@ -93,10 +119,31 @@ class BaiduSubmitForWordpress
                 ?>
 
             </form>
+        </div>
+    <?php }
+
+    public function create_admin_manual_submit_page()
+    {
+        $options = get_option('baidu_submit_for_wordpress_options'); ?>
+        <div class="wrap">
+            <h2>Baidu Submit for Wordpress - Manual Submit</h2>
+
+            <h2 class="nav-tab-wrapper">
+                <a class="nav-tab" href="<?php echo admin_url() ?>/options-general.php?page=baidu_submit_for_wordpress_settings">Settings</a>
+                <a class="nav-tab nav-tab-active" href="<?php echo admin_url() ?>/options-general.php?page=baidu_submit_for_wordpress_manual_submit">Manual
+                    Submit</a>
+            </h2>
+
             <br/>
 
-            <h1>Submit Manually</h1>
+            <div>
+                <button type="button" class="button-primary" data-role="baidu-submit-for-wordpress-submit-btn">Submit</button>
+                <span data-role="baidu-submit-for-wordpress-log"></span>
+            </div>
+            <br/>
             <hr/>
+
+
             <div id="baidu-submit-for-wordpress-url-table">
                 <h2>Posts</h2>
                 <table data-role="url-table">
@@ -171,20 +218,22 @@ class BaiduSubmitForWordpress
                     </tbody>
                 </table>
             </div>
+            <hr/>
             <br/>
 
             <div>
-                <button type="button" class="button-primary" id="baidu-submit-for-wordpress-submit-btn">Submit</button>
+                <button type="button" class="button-primary" data-role="baidu-submit-for-wordpress-submit-btn">Submit</button>
+                <span data-role="baidu-submit-for-wordpress-log"></span>
             </div>
-            <p id="baidu-submit-for-wordpress-log"></p>
         </div>
-    <?php }
+        <?php
+    }
 
     /**
      * Register setting sections and fields
      *
      */
-    public function page_init()
+    public function admin_init()
     {
         register_setting(
             'baidu_submit_for_wordpress_options_group',
@@ -266,14 +315,14 @@ class BaiduSubmitForWordpress
      * Insert JavaScript snippet to the footer of page
      *
      */
-    public function page_footer()
+    public function admin_footer()
     {
         ?>
         <script>
             jQuery(document).ready(function ($) {
                 var urlTable = $('#baidu-submit-for-wordpress-url-table'),
-                    submitBtn = $('#baidu-submit-for-wordpress-submit-btn'),
-                    log = $('#baidu-submit-for-wordpress-log'),
+                    submitBtn = $('button[data-role=baidu-submit-for-wordpress-submit-btn]'),
+                    log = $('span[data-role=baidu-submit-for-wordpress-log]'),
                     checkAll = $('input[value=checkAll]');
 
                 checkAll.click(function () {
@@ -293,7 +342,7 @@ class BaiduSubmitForWordpress
                             action: 'baidu_submit_for_wordpress_manual',
                             urls: urls
                         }, function (data) {
-                            log.html(log.html() + '<br/>' + '[INFO]' + new Date().toLocaleString() + ': ' + data);
+                            log.html('[INFO]' + new Date().toLocaleString() + ': ' + data);
                             submitBtn.prop('disabled', false);
                         });
                     }
@@ -308,7 +357,7 @@ class BaiduSubmitForWordpress
      * Collect the links user checked with and submit them to Baidu API
      *
      */
-    public function baidu_submit_for_wordpress_manual_callback()
+    public function manual_submit_callback()
     {
         $options = get_option('baidu_submit_for_wordpress_options');
         if ($options && isset($_POST['urls'])) {
