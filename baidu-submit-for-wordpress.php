@@ -4,7 +4,7 @@
 Plugin Name: Baidu Submit for Wordpress
 Plugin URI: http://anubarak.com/
 Description: Baidu Submit for Wordpress
-Version: 0.0.3
+Version: 0.1.0
 Author: wxsm
 Author URI: http://anubarak.com/
 License: MIT
@@ -12,7 +12,6 @@ License: MIT
 
 /**
  * Class BaiduSubmitForWordpress
- *
  * Main class of this plugin.
  */
 class BaiduSubmitForWordpress
@@ -43,7 +42,6 @@ class BaiduSubmitForWordpress
      *
      * For categories/tags, using default query functions of Wordpress.
      * For post/page, using custom query which select only 3 fields for the sake of not killing the server.
-     *
      */
     private function fetch_links()
     {
@@ -62,7 +60,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Add admin panel menus
-     *
      */
     public function admin_menu()
     {
@@ -85,7 +82,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Remove unused option tabs. Keep the major one.
-     *
      */
     public function admin_head()
     {
@@ -94,7 +90,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Add admin panel setting page
-     *
      */
     public function create_admin_setting_page()
     {
@@ -122,9 +117,12 @@ class BaiduSubmitForWordpress
         </div>
     <?php }
 
+
+    /**
+     * Add admin panel manual submit page
+     */
     public function create_admin_manual_submit_page()
-    {
-        $options = get_option('baidu_submit_for_wordpress_options'); ?>
+    { ?>
         <div class="wrap">
             <h2>Baidu Submit for Wordpress - Manual Submit</h2>
 
@@ -231,7 +229,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Register setting sections and fields
-     *
      */
     public function admin_init()
     {
@@ -279,7 +276,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Junk function
-     *
      */
     public function print_section_info()
     {
@@ -289,7 +285,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Create input field for setting field 'site_domain'
-     *
      */
     public function site_domain_callback()
     {
@@ -301,7 +296,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Create input field for setting field 'site_token'
-     *
      */
     public function site_token_callback()
     {
@@ -313,7 +307,6 @@ class BaiduSubmitForWordpress
 
     /**
      * Insert JavaScript snippet to the footer of page
-     *
      */
     public function admin_footer()
     {
@@ -355,7 +348,6 @@ class BaiduSubmitForWordpress
     /**
      * Handle manual submit Ajax request.
      * Collect the links user checked with and submit them to Baidu API
-     *
      */
     public function manual_submit_callback()
     {
