@@ -4,40 +4,64 @@
 Plugin Name: Baidu Submit for Wordpress
 Plugin URI: http://anubarak.com/
 Description: Baidu Submit for Wordpress
-Version: 0.0.1
+Version: 0.0.3
 Author: wxsm
 Author URI: http://anubarak.com/
 License: MIT
 */
 
-class BaiduSubmitForWordpressSettingsPage
+/**
+ * Class BaiduSubmitForWordpress
+ *
+ * Main class of this plugin.
+ */
+class BaiduSubmitForWordpress
 {
 
     private $options;
-    private $articles;
-    private $categories;
-    private $tags;
-    private $posts;
-    private $pages;
+    private $links; //This is to store fetched links for manual submit
 
     public function __construct()
     {
+        //Init admin menu
         add_action('admin_menu', array($this, 'baidu_submit_for_wordpress_menu'));
         add_action('admin_init', array($this, 'page_init'));
+
+        //Add JS to page footer
         add_action('admin_footer', array($this, 'page_footer'));
+
+        //Ajax function to handle manual submit
         add_action('wp_ajax_baidu_submit_for_wordpress_manual', array($this, 'baidu_submit_for_wordpress_manual_callback'));
 
+        $this->fetch_links();
+    }
+
+    /**
+     * Fetch all links from database.
+     * Including post/page(must be publish and public), categories and tags.
+     *
+     * For categories/tags, using default query functions of Wordpress.
+     * For post/page, using custom query which select only 3 fields for the sake of not killing the server.
+     *
+     */
+    private function fetch_links()
+    {
         global $wpdb;
-        $this->articles = $wpdb->get_results("SELECT ID,post_title,post_type FROM $wpdb->posts WHERE post_status = 'publish' AND (post_type='post' or post_type='page') AND post_password = '' order by post_date desc");
-        $this->categories = get_categories();
-        $this->tags = get_tags();
-        $this->posts = array();
-        $this->pages = array();
-        foreach ($this->articles as $article) {
-            $article->post_type == 'post' ? $this->posts[] = $article : $this->pages[] = $article;
+        $sql = "SELECT ID,post_title,post_type FROM $wpdb->posts WHERE post_status = 'publish' AND (post_type='post' or post_type='page') AND post_password = '' order by post_date desc";
+
+        $this->links = array();
+        $this->links['categories'] = get_categories();
+        $this->links['tags'] = get_tags();
+        $this->links['posts'] = array();
+        $this->links['pages'] = array();
+        foreach ($wpdb->get_results($sql) as $article) {
+            $article->post_type == 'post' ? $this->links['posts'][] = $article : $this->links['pages'][] = $article;
         }
     }
 
+    /**
+     * Add admin panel menu
+     */
     public function baidu_submit_for_wordpress_menu()
     {
         add_options_page(
@@ -49,6 +73,9 @@ class BaiduSubmitForWordpressSettingsPage
         );
     }
 
+    /**
+     * Add admin panel setting page
+     */
     public function create_admin_page()
     {
 
@@ -71,72 +98,72 @@ class BaiduSubmitForWordpressSettingsPage
             <h1>Submit Manually</h1>
             <hr/>
             <div id="baidu-submit-for-wordpress-url-table">
-                <h3 class="page-header">Posts</h3>
-                <table class="table">
+                <h2>Posts</h2>
+                <table data-role="url-table">
                     <thead>
                     <tr>
-                        <th><input type="checkbox" value="checkAll"></th>
+                        <th><input title="Check all" type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
-                    foreach ($this->posts as $post) {
+                    foreach ($this->links['posts'] as $post) {
                         $permalink = get_permalink($post->ID);
                         echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$post->post_title}</td><td>{$permalink}</td></tr>";
                     }
                     ?>
                     </tbody>
                 </table>
-                <h2 class="page-header">Pages</h2>
-                <table class="table">
+                <h2>Pages</h2>
+                <table data-role="url-table">
                     <thead>
                     <tr>
-                        <th><input type="checkbox" value="checkAll"></th>
+                        <th><input title="Check all" type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
-                    foreach ($this->pages as $page) {
+                    foreach ($this->links['pages'] as $page) {
                         $permalink = get_permalink($page->ID);
                         echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$page->post_title}</td><td>{$permalink}</td></tr>";
                     }
                     ?>
                     </tbody>
                 </table>
-                <h2 class="page-header">Categories</h2>
-                <table class="table">
+                <h2>Categories</h2>
+                <table data-role="url-table">
                     <thead>
                     <tr>
-                        <th><input type="checkbox" value="checkAll"></th>
+                        <th><input title="Check all" type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
-                    foreach ($this->categories as $category) {
+                    foreach ($this->links['categories'] as $category) {
                         $permalink = get_category_link($category->term_id);
                         echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$category->name}</td><td>{$permalink}</td></tr>";
                     }
                     ?>
                     </tbody>
                 </table>
-                <h2 class="page-header">Tags</h2>
-                <table class="table">
+                <h2>Tags</h2>
+                <table data-role="url-table">
                     <thead>
                     <tr>
-                        <th><input type="checkbox" value="checkAll"></th>
+                        <th><input title="Check all" type="checkbox" value="checkAll"></th>
                         <th>Title</th>
                         <th>URL</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
-                    foreach ($this->tags as $tag) {
+                    foreach ($this->links['tags'] as $tag) {
                         $permalink = get_tag_link($tag->term_id);
                         echo "<tr><td><input type=\"checkbox\" value=\"{$permalink}\"></td><td>{$tag->name}</td><td>{$permalink}</td></tr>";
                     }
@@ -153,6 +180,10 @@ class BaiduSubmitForWordpressSettingsPage
         </div>
     <?php }
 
+    /**
+     * Register setting sections and fields
+     *
+     */
     public function page_init()
     {
         register_setting(
@@ -185,39 +216,56 @@ class BaiduSubmitForWordpressSettingsPage
         );
     }
 
+    /**
+     * Sanitize user input after submit
+     *
+     * @param $input
+     * @return mixed
+     */
     public function sanitize($input)
     {
         //TODO
         return $input;
     }
 
+    /**
+     * Junk function
+     *
+     */
     public function print_section_info()
     {
         //TODO
         print '';
     }
 
+    /**
+     * Create input field for setting field 'site_domain'
+     *
+     */
     public function site_domain_callback()
     {
-        $siteUrl = get_site_url();
         printf(
-            '<input type="text" id="theme_id" name="baidu_submit_for_wordpress_options[site_domain]" value="%s"/>
-       <p class="description">The exact site domain you register on Baidu, without <code>http</code> or <code>https</code> prefix.</p>
-      ',
+            '<input type="text" name="baidu_submit_for_wordpress_options[site_domain]" value="%s"/><p class="description">The exact site domain you register on Baidu, without <code>http</code> or <code>https</code> prefix.</p>',
             isset($this->options['site_domain']) ? esc_attr($this->options['site_domain']) : ''
         );
     }
 
+    /**
+     * Create input field for setting field 'site_token'
+     *
+     */
     public function site_token_callback()
     {
         printf(
-            '<input type="text" id="theme_id" name="baidu_submit_for_wordpress_options[site_token]" value="%s" />
-      <p class="description">The entry token given by Baidu after you register you site.</p>
-      ',
+            '<input type="text" name="baidu_submit_for_wordpress_options[site_token]" value="%s" /><p class="description">The entry token given by Baidu after you register you site.</p>',
             isset($this->options['site_token']) ? esc_attr($this->options['site_token']) : ''
         );
     }
 
+    /**
+     * Insert JavaScript snippet to the footer of page
+     *
+     */
     public function page_footer()
     {
         ?>
@@ -230,7 +278,7 @@ class BaiduSubmitForWordpressSettingsPage
 
                 checkAll.click(function () {
                     var $this = $(this);
-                    $this.parents('table').find('tbody').find('input[type=checkbox]').prop('checked', $this.is(':checked'));
+                    $this.parents('table[data-role=url-table]').find('tbody').find('input[type=checkbox]').prop('checked', $this.is(':checked'));
                 });
 
                 submitBtn.click(function () {
@@ -255,6 +303,11 @@ class BaiduSubmitForWordpressSettingsPage
         <?php
     }
 
+    /**
+     * Handle manual submit Ajax request.
+     * Collect the links user checked with and submit them to Baidu API
+     *
+     */
     public function baidu_submit_for_wordpress_manual_callback()
     {
         $options = get_option('baidu_submit_for_wordpress_options');
@@ -274,9 +327,9 @@ class BaiduSubmitForWordpressSettingsPage
 
 }
 
+//Create plugin instance in admin panel
 if (is_admin()) {
-    $baidu_submit_for_wordpress_settings_page = new BaiduSubmitForWordpressSettingsPage();
+    $baidu_submit_for_wordpress = new BaiduSubmitForWordpress();
 }
-
 
 ?>
